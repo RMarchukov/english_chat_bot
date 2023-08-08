@@ -17,16 +17,14 @@ async def site_link(message: types.Message):
 
 async def create_main_token(message: types.Message):
     await message.answer('Введіть логін')
+    await UserData.username.set()
     await message.delete()
 
 
 async def write_login(message: types.Message, state: FSMContext):
-    await UserData.login.set()
-    login = message.text
-    await state.update_data(login=login)
-    print(await state.get_data())
+    username = message.text
+    await state.update_data(username=username)
     await message.answer(text='Введіть пароль')
-    await state.reset_state(with_data=False)
     await UserData.password.set()
 
 
@@ -34,9 +32,11 @@ async def write_password(message: types.Message, state: FSMContext):
     password = message.text
     await state.update_data(password=password)
     data = await state.get_data()
-    print(data)
-    token = await create_token()
-    await message.answer(text=f'Your token is {token}')
+    token = await create_token(data)
+    try:
+        await message.answer(text=f'Your token is: {token["auth_token"]}')
+    except:
+        await message.answer(text='Unvalid data')
     await state.reset_state(with_data=False)
 
 
@@ -74,7 +74,7 @@ def register_settings_handlers(dp: Dispatcher):
     dp.register_message_handler(settings, commands=['settings'])
     dp.register_message_handler(site_link, filters.Text(equals='посилання на сайт', ignore_case=True))
     dp.register_message_handler(create_main_token, filters.Text(equals='створити токен', ignore_case=True))
-    dp.register_message_handler(write_login, state=UserData.login)
+    dp.register_message_handler(write_login, state=UserData.username)
     dp.register_message_handler(write_password, state=UserData.password)
     # dp.register_message_handler(add_token, filters.Text(equals='додати токен', ignore_case=True))
     # dp.register_message_handler(auth_by_token, state=UserData.token)

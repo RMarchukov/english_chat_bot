@@ -44,15 +44,15 @@ def get_levels_keyboard():
     return {'levels_keyboard': levels_keyboard, 'level_filter': level_filter}
 
 
-def get_topics_keyboard(level):
-    topic_filter = []
-    keyboard_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+def get_topics_keyboard(level=None):
+    topics_keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
     topics = requests.get('https://romamarchukov.pythonanywhere.com/api/topics').json()['results']
     for topic in topics:
         if level == topic['level']:
-            keyboard_markup.insert(topic['name'])
-    keyboard_markup.add('/start')
-    return keyboard_markup
+            topics_keyboard.insert(topic['name'])
+    topics_keyboard.add('/levels')
+    topics_keyboard.add('/start')
+    return {'topics_keyboard': topics_keyboard, 'topic_filter': [topic['name'] for topic in topics]}
 
 
 async def get_choice_keyboard(language_of_test, words):

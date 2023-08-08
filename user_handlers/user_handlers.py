@@ -5,7 +5,6 @@ from .user_states import ForUserHandlers
 from .user_keyboards import menu_keyboard, get_levels_keyboard, get_topics_keyboard, test_keyboard,\
     get_choice_keyboard, user_words_menu, group_of_words, types_of_tests
 from .user_functions import main, get_words_by_group
-from aiogram.utils.exceptions import MessageIsTooLong
 
 
 async def menu(message: types.Message):
@@ -21,8 +20,9 @@ async def chose_level(message: types.Message):
 
 
 async def chose_topic(message: types.Message):
-    keyboard = get_topics_keyboard(message.text)
-    await message.answer(text='chose topic', reply_markup=keyboard)
+    data = get_topics_keyboard(message.text)
+    topic_keyboard = data['topics_keyboard']
+    await message.answer(text='chose topic', reply_markup=topic_keyboard)
     await message.delete()
 
 
@@ -167,17 +167,10 @@ async def show_words(message: types.Message):
     words = await main(url=f'https://romamarchukov.pythonanywhere.com/api/words/topic/{param}')
     # for word in words['results']:
     #     await message.answer(f'<b>{word["in_english"]}</b>  &#9824  <b>{word["in_ukrainian"]}</b>', parse_mode='HTML')
-    try:
-        await message.answer(f'норм')
-        await message.answer(f'{words["results"][0:33]}')
-        await message.answer(f'{words["results"][33:66]}')
-        await message.answer(f'{words["results"][66:102]}')
-    except MessageIsTooLong:
-        await message.answer(f'если ошибка')
-        await message.answer(f'{words["results"][0:10]}')
-    finally:
-        await message.answer(f'при любих')
-        await message.answer(f'{words["results"][0:10]}')
+    await message.answer(f'{words["results"][0:25]}')
+    await message.answer(f'{words["results"][25:50]}')
+    await message.answer(f'{words["results"][50:75]}')
+    await message.answer(f'{words["results"][75:100]}')
 
 
 def register_user_handlers(dp: Dispatcher):
@@ -199,4 +192,4 @@ def register_user_handlers(dp: Dispatcher):
                                 state=ForUserHandlers.word)
     dp.register_callback_query_handler(get_choice, state=ForUserHandlers.answer)
     dp.register_message_handler(get_answer, state=ForUserHandlers.answer)
-    dp.register_message_handler(show_words)
+    dp.register_message_handler(show_words, filters.Text(equals=get_topics_keyboard()['topic_filter'], ignore_case=True))
