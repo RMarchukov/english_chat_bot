@@ -5,3 +5,5 @@ class UserData(StatesGroup):
     username = State()
     password = State()
     token = State()
+    access_token = State()
+    status_jwt_token = State()

@@ -2,35 +2,24 @@ from random import choice
 from aiogram import types, Dispatcher
 from aiogram.dispatcher import FSMContext, filters
 from .user_states import ForUserHandlers
-from .user_keyboards import menu_keyboard, get_levels_keyboard, get_topics_keyboard, test_keyboard,\
-    get_choice_keyboard, user_words_menu, group_of_words, types_of_tests
+from .user_keyboards import get_topics_keyboard, get_choice_keyboard, user_words_menu
 from .user_functions import main, get_words_by_group
-
-
-async def menu(message: types.Message):
-    await message.answer('menu', reply_markup=menu_keyboard)
-    await message.delete()
-
-
-async def chose_level(message: types.Message):
-    data = get_levels_keyboard()
-    level_keyboard = data['levels_keyboard']
-    await message.answer(text='chose level', reply_markup=level_keyboard)
-    await message.delete()
+from commands_handlers.commands_keyboards import test_keyboard, get_levels_keyboard
 
 
 async def chose_topic(message: types.Message):
     data = get_topics_keyboard(message.text)
     topic_keyboard = data['topics_keyboard']
-    await message.answer(text='chose topic', reply_markup=topic_keyboard)
+    await message.answer(text='Оберіть тему', reply_markup=topic_keyboard)
     await message.delete()
 
 
 async def show_verbs(message: types.Message):
     verbs = await main('https://romamarchukov.pythonanywhere.com/api/verbs')
-    await message.answer(f'{verbs["results"][0:33]}')
-    await message.answer(f'{verbs["results"][33:66]}')
-    await message.answer(f'{verbs["results"][66:99]}')
+    await message.answer(verbs['results'][0:25])
+    await message.answer(verbs['results'][25:50])
+    await message.answer(verbs['results'][50:75])
+    await message.answer(verbs['results'][75:100])
     await message.delete()
 
 
@@ -41,9 +30,10 @@ async def user_words(message: types.Message):
 
 async def show_user_words(message: types.Message):
     words = await main('https://romamarchukov.pythonanywhere.com/api/user-words/')
-    await message.answer(f'{words["results"][0:33]}')
-    await message.answer(f'{words["results"][33:66]}')
-    await message.answer(f'{words["results"][66:99]}')
+    await message.answer(f'{words["results"][0:25]}')
+    await message.answer(f'{words["results"][25:50]}')
+    await message.answer(f'{words["results"][50:75]}')
+    await message.answer(f'{words["results"][75:100]}')
     await message.delete()
 
 
@@ -71,11 +61,6 @@ async def add_ukraine_word(message: types.Message, state: FSMContext):
     await state.reset_state(with_data=False)
 
 
-async def show_groups_of_words(message: types.Message):
-    await message.answer(text='choose group of words', reply_markup=group_of_words)
-    await message.delete()
-
-
 async def show_tests(message: types.Message, state: FSMContext):
     await ForUserHandlers.words_group.set()
     await message.answer(text='choose test', reply_markup=test_keyboard)
@@ -89,9 +74,10 @@ async def show_tests(message: types.Message, state: FSMContext):
 
 async def tests(message: types.Message, state: FSMContext):
     keys = await state.get_data()
-    if message.text == '/start':
+    if message.text == '/menu':
         await state.reset_state(with_data=False)
-        await menu(message)
+        await message.answer('оберіть', reply_markup=types.ReplyKeyboardMarkup(resize_keyboard=True,
+                                                                               one_time_keyboard=True).add('💬Меню'))
     else:
         words = await get_words_by_group(keys['key'])
         all_words = words['results']
@@ -174,22 +160,20 @@ async def show_words(message: types.Message):
 
 
 def register_user_handlers(dp: Dispatcher):
-    dp.register_message_handler(menu, commands=['start', 'help'])
-    dp.register_message_handler(chose_level, commands=['levels'])
-    dp.register_message_handler(chose_topic, filters.Text(equals=get_levels_keyboard()['level_filter'], ignore_case=True))
+    dp.register_message_handler(chose_topic, filters.Text(equals=get_levels_keyboard()['level_filter'],
+                                                          ignore_case=True))
     dp.register_message_handler(show_verbs, filters.Text(equals='Неправильні дієслова', ignore_case=True))
     dp.register_message_handler(user_words, filters.Text(equals='Особисті слова', ignore_case=True))
     dp.register_message_handler(show_user_words, filters.Text(equals='подивитися свої слова', ignore_case=True))
     dp.register_message_handler(add_user_words, filters.Text(equals='додати слово', ignore_case=True))
     dp.register_message_handler(add_english_word, state=ForUserHandlers.english_word)
     dp.register_message_handler(add_ukraine_word, state=ForUserHandlers.ukraine_word)
-    dp.register_message_handler(show_groups_of_words, commands=['tests'])
     dp.register_message_handler(show_tests, filters.Text(equals=['особисті слова',
                                                                  'основні слова',
                                                                  'тестування особистих слів'],
                                                          ignore_case=True))
-    dp.register_message_handler(tests, filters.Text(equals=types_of_tests, ignore_case=True),
-                                state=ForUserHandlers.word)
+    dp.register_message_handler(tests, state=ForUserHandlers.word)
     dp.register_callback_query_handler(get_choice, state=ForUserHandlers.answer)
     dp.register_message_handler(get_answer, state=ForUserHandlers.answer)
-    dp.register_message_handler(show_words, filters.Text(equals=get_topics_keyboard()['topic_filter'], ignore_case=True))
+    dp.register_message_handler(show_words, filters.Text(equals=get_topics_keyboard()['topic_filter'],
+                                                         ignore_case=True))

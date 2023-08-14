@@ -3,17 +3,17 @@ import aiohttp
 from dotenv import load_dotenv
 
 
-load_dotenv()
-SITE_TOKEN = os.getenv('SITE_TOKEN')
-PARAMS = {'Authorization': f'Token {SITE_TOKEN}'}
-
-
 # async def get_topics():
 #     async with aiohttp.ClientSession() as session:
 #         async with session.get('https://romamarchukov.pythonanywhere.com/api/topics') as resp:
 #             assert resp.status == 200
 #             print(await resp.text())
 #             return await resp.text()
+
+
+load_dotenv()
+SITE_TOKEN = os.getenv('SITE_TOKEN')
+PARAMS = {'Authorization': f'Token {SITE_TOKEN}'}
 
 
 async def main(url, data=None):
