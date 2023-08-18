@@ -14,16 +14,17 @@ from dotenv import load_dotenv
 load_dotenv()
 SITE_TOKEN = os.getenv('SITE_TOKEN')
 PARAMS = {'Authorization': f'Token {SITE_TOKEN}'}
+PROXY_URL = os.getenv('PROXY')
 
 
 async def main(url, data=None):
     if data:
         async with aiohttp.ClientSession() as session:
-            async with session.post(url=url, headers=PARAMS, data=data) as response:
+            async with session.post(url=url, headers=PARAMS, data=data, proxy=PROXY_URL) as response:
                 return await response.json()
     else:
         async with aiohttp.ClientSession() as session:
-            async with session.get(url=url, headers=PARAMS, data=data) as response:
+            async with session.get(url=url, headers=PARAMS, data=data, proxy=PROXY_URL) as response:
                 return await response.json()
 
 

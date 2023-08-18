@@ -16,11 +16,23 @@ async def chose_topic(message: types.Message):
 
 async def show_verbs(message: types.Message):
     verbs = await main('https://romamarchukov.pythonanywhere.com/api/verbs')
-    await message.answer(verbs['results'][0:25])
-    await message.answer(verbs['results'][25:50])
-    await message.answer(verbs['results'][50:75])
-    await message.answer(verbs['results'][75:100])
-    await message.delete()
+    start = 0
+    max_range = 25
+    parsed_list = []
+    while True:
+        res = verbs["results"][start:max_range]
+        if res:
+            for word in res:
+                one_parse_word = f'<b>{word["first_form"]}</b>  &#9824  <b>{word["second_form"]}</b>  &#9824  ' \
+                                 f'<b>{word["third_form"]}</b>  &#9824  <b>{word["translate"]}</b>'
+                parsed_list.append(one_parse_word)
+            answer = '\n'.join(parsed_list)
+            await message.answer(f'{answer}', parse_mode='HTML')
+            start = max_range
+            max_range += 25
+            parsed_list.clear()
+        else:
+            break
 
 
 async def user_words(message: types.Message):
@@ -30,11 +42,22 @@ async def user_words(message: types.Message):
 
 async def show_user_words(message: types.Message):
     words = await main('https://romamarchukov.pythonanywhere.com/api/user-words/')
-    await message.answer(f'{words["results"][0:25]}')
-    await message.answer(f'{words["results"][25:50]}')
-    await message.answer(f'{words["results"][50:75]}')
-    await message.answer(f'{words["results"][75:100]}')
-    await message.delete()
+    start = 0
+    max_range = 25
+    parsed_list = []
+    while True:
+        res = words["results"][start:max_range]
+        if res:
+            for word in res:
+                one_parse_word = f'<b>{word["english_word"]}</b>  &#9824  <b>{word["ukraine_word"]}</b>'
+                parsed_list.append(one_parse_word)
+            answer = '\n'.join(parsed_list)
+            await message.answer(f'{answer}', parse_mode='HTML')
+            start = max_range
+            max_range += 25
+            parsed_list.clear()
+        else:
+            break
 
 
 async def add_user_words(message: types.Message):
@@ -66,7 +89,7 @@ async def show_tests(message: types.Message, state: FSMContext):
     await message.answer(text='choose test', reply_markup=test_keyboard)
     if message.text == 'Основні слова':
         await state.update_data(key='main_words', english_key='in_english', ukraine_key='in_ukrainian')
-    elif message.text == 'Особисті слова' or message.text == 'тестування особистих слів':
+    elif message.text == 'Особисті слова' or message.text == 'Тестування особистих слів':
         await state.update_data(key='user_words', english_key='english_word', ukraine_key='ukraine_word')
     await ForUserHandlers.word.set()
     await message.delete()
@@ -74,39 +97,34 @@ async def show_tests(message: types.Message, state: FSMContext):
 
 async def tests(message: types.Message, state: FSMContext):
     keys = await state.get_data()
-    if message.text == '/menu':
-        await state.reset_state(with_data=False)
-        await message.answer('оберіть', reply_markup=types.ReplyKeyboardMarkup(resize_keyboard=True,
-                                                                               one_time_keyboard=True).add('💬Меню'))
-    else:
-        words = await get_words_by_group(keys['key'])
-        all_words = words['results']
-        random_word = choice(all_words)
-        if message.text == 'переклад з англійської':
-            random_word_in_english = random_word.get(keys['english_key'])
-            await message.answer(text=f'Перекладіть слово - <b>{random_word_in_english}</b>', parse_mode='HTML')
-        elif message.text == 'переклад з української':
-            random_word_in_ukrainian = random_word[keys['ukraine_key']]
-            await message.answer(text=f'Перекладіть слово - <b>{random_word_in_ukrainian}</b>', parse_mode='HTML')
-        elif message.text == 'вибір з англійскої':
-            random_word_in_english = random_word[keys['english_key']]
-            random_word_in_ukrainian = random_word[keys['ukraine_key']]
-            keyboard = await get_choice_keyboard(keys['ukraine_key'], words)
-            keyboard.insert(
-                types.InlineKeyboardButton(text=random_word_in_ukrainian, callback_data=random_word_in_ukrainian))
-            await message.answer(text=f'Перекладіть слово - <b>{random_word_in_english}</b>', parse_mode='HTML',
-                                 reply_markup=keyboard)
-        elif message.text == 'вибір з української':
-            random_word_in_ukrainian = random_word[keys['ukraine_key']]
-            random_word_in_english = random_word[keys['english_key']]
-            keyboard = await get_choice_keyboard(keys['english_key'], words)
-            keyboard.insert(
-                types.InlineKeyboardButton(text=random_word_in_english, callback_data=random_word_in_english))
-            await message.answer(text=f'Перекладіть слово - <b>{random_word_in_ukrainian}</b>', parse_mode='HTML',
-                                 reply_markup=keyboard)
-        await state.update_data(word=random_word)
-        await ForUserHandlers.answer.set()
-        await message.delete()
+    words = await get_words_by_group(keys['key'])
+    all_words = words['results']
+    random_word = choice(all_words)
+    if message.text == 'переклад з англійської':
+        random_word_in_english = random_word.get(keys['english_key'])
+        await message.answer(text=f'Перекладіть слово - <b>{random_word_in_english}</b>', parse_mode='HTML')
+    elif message.text == 'переклад з української':
+        random_word_in_ukrainian = random_word[keys['ukraine_key']]
+        await message.answer(text=f'Перекладіть слово - <b>{random_word_in_ukrainian}</b>', parse_mode='HTML')
+    elif message.text == 'вибір з англійскої':
+        random_word_in_english = random_word[keys['english_key']]
+        random_word_in_ukrainian = random_word[keys['ukraine_key']]
+        keyboard = await get_choice_keyboard(keys['ukraine_key'], words)
+        keyboard.insert(
+            types.InlineKeyboardButton(text=random_word_in_ukrainian, callback_data=random_word_in_ukrainian))
+        await message.answer(text=f'Перекладіть слово - <b>{random_word_in_english}</b>', parse_mode='HTML',
+                             reply_markup=keyboard)
+    elif message.text == 'вибір з української':
+        random_word_in_ukrainian = random_word[keys['ukraine_key']]
+        random_word_in_english = random_word[keys['english_key']]
+        keyboard = await get_choice_keyboard(keys['english_key'], words)
+        keyboard.insert(
+            types.InlineKeyboardButton(text=random_word_in_english, callback_data=random_word_in_english))
+        await message.answer(text=f'Перекладіть слово - <b>{random_word_in_ukrainian}</b>', parse_mode='HTML',
+                             reply_markup=keyboard)
+    await state.update_data(word=random_word)
+    await ForUserHandlers.answer.set()
+    await message.delete()
 
 
 async def get_choice(callback: types.CallbackQuery, state: FSMContext):
@@ -151,12 +169,22 @@ async def get_answer(message: types.Message, state: FSMContext):
 async def show_words(message: types.Message):
     param = message.text
     words = await main(url=f'https://romamarchukov.pythonanywhere.com/api/words/topic/{param}')
-    # for word in words['results']:
-    #     await message.answer(f'<b>{word["in_english"]}</b>  &#9824  <b>{word["in_ukrainian"]}</b>', parse_mode='HTML')
-    await message.answer(f'{words["results"][0:25]}')
-    await message.answer(f'{words["results"][25:50]}')
-    await message.answer(f'{words["results"][50:75]}')
-    await message.answer(f'{words["results"][75:100]}')
+    start = 0
+    max_range = 25
+    parsed_list = []
+    while True:
+        res = words["results"][start:max_range]
+        if res:
+            for word in res:
+                one_parse_word = f'<b>{word["in_english"]}</b>  &#9824  <b>{word["in_ukrainian"]}</b>'
+                parsed_list.append(one_parse_word)
+            answer = '\n'.join(parsed_list)
+            await message.answer(f'{answer}', parse_mode='HTML')
+            start = max_range
+            max_range += 25
+            parsed_list.clear()
+        else:
+            break
 
 
 def register_user_handlers(dp: Dispatcher):
@@ -164,13 +192,13 @@ def register_user_handlers(dp: Dispatcher):
                                                           ignore_case=True))
     dp.register_message_handler(show_verbs, filters.Text(equals='Неправильні дієслова', ignore_case=True))
     dp.register_message_handler(user_words, filters.Text(equals='Особисті слова', ignore_case=True))
-    dp.register_message_handler(show_user_words, filters.Text(equals='подивитися свої слова', ignore_case=True))
-    dp.register_message_handler(add_user_words, filters.Text(equals='додати слово', ignore_case=True))
+    dp.register_message_handler(show_user_words, filters.Text(equals='Подивитися свої слова', ignore_case=True))
+    dp.register_message_handler(add_user_words, filters.Text(equals='Додати слово', ignore_case=True))
     dp.register_message_handler(add_english_word, state=ForUserHandlers.english_word)
     dp.register_message_handler(add_ukraine_word, state=ForUserHandlers.ukraine_word)
-    dp.register_message_handler(show_tests, filters.Text(equals=['особисті слова',
-                                                                 'основні слова',
-                                                                 'тестування особистих слів'],
+    dp.register_message_handler(show_tests, filters.Text(equals=['Особисті слова',
+                                                                 'Основні слова',
+                                                                 'Тестування особистих слів'],
                                                          ignore_case=True))
     dp.register_message_handler(tests, state=ForUserHandlers.word)
     dp.register_callback_query_handler(get_choice, state=ForUserHandlers.answer)

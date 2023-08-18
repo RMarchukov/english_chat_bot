@@ -3,7 +3,7 @@ import requests
 
 
 types_of_tests = ['переклад з англійської', 'переклад з української', 'вибір з англійскої', 'вибір з української',
-                  '💬menu']
+                  '💬Меню']
 
 
 settings_keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)

@@ -6,7 +6,7 @@ from settings_handlers import settings_handlers
 from commands_handlers import commands_handlers
 
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 
 commands_handlers.register_commands_handlers(dp)

@@ -8,7 +8,7 @@ storage = MemoryStorage()
 
 load_dotenv()
 TOKEN = os.getenv('TOKEN')
+PROXY_URL = os.getenv('PROXY')
 
-
-bot = Bot(TOKEN)
+bot = Bot(TOKEN, proxy=PROXY_URL)
 dp = Dispatcher(bot=bot, storage=storage)

@@ -2,6 +2,7 @@ from aiogram import types, Dispatcher
 from .commands_keyboards import menu_keyboard, settings_keyboard, get_levels_keyboard, group_of_words
 from aiogram.dispatcher import FSMContext
 
+
 async def start(message: types.Message):
     await message.answer(f'Hello {message.from_user.username}. Glad to see you!',
                          reply_markup=types.ReplyKeyboardMarkup(resize_keyboard=True,
